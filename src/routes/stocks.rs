@@ -1,19 +1,29 @@
-// 'serde' dependency is mentioned in Cargo.toml file.
+use rocket::get;
+use diesel::{RunQueryDsl, QueryDsl};
+use rocket::serde::json::Json;
+use crate::schema::stock::dsl::*;
+use crate::models::Stock;
+use crate::database;
 
-use rocket::serde::{Serialize, Deserialize};
-use rocket::serde::json::{Json}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(crate = "rocket::serde")]
-pub struct Stock {
-    pub name: String,
-    pub symbol: String
+#[get("/stocks/getAll")]
+pub fn index() -> Json<Vec<Stock>> {
+    let connection = &mut database::establish_connection();
+    
+    let result = stock.load::<Stock>(connection).map(Json).expect("Error loading stocks");
+    return result;
 }
 
-// Importing the services folder.
-use crate::services;
+#[get("/stocks/get?<stock_id>")]
+pub fn get_stock_by_id(stock_id: i32) -> Json<Stock> {
+    let connection = &mut database::establish_connection();
 
-#[get("/get-stock")]
-pub fn get_stock() -> Json<Stock> {
-    Json(services::stock::get_stock())
+    let result = 
+        stock.find(stock_id)
+             .first::<Stock>(connection)
+             .map(Json)
+             .expect("Error loading stocks");
+
+    println!("{:?}", result);
+
+    return result;
 }
