@@ -1,29 +1,30 @@
+use rocket::http::Status;
 use rocket::get;
-use diesel::{RunQueryDsl, QueryDsl};
 use rocket::serde::json::Json;
-use crate::schema::stock::dsl::*;
+
 use crate::models::Stock;
-use crate::database;
+use crate::services::stocks;
 
 #[get("/stocks/getAll")]
-pub fn index() -> Json<Vec<Stock>> {
-    let connection = &mut database::establish_connection();
-    
-    let result = stock.load::<Stock>(connection).map(Json).expect("Error loading stocks");
-    return result;
+pub fn index() -> Result<Json<Vec<Stock>>, Status> {
+    let all_stocks = stocks::get_all_stock();
+    if all_stocks.len() > 0 {
+        return Ok(Json(all_stocks));
+    }
+    else {
+        return Err(Status::NoContent);
+    }
 }
 
 #[get("/stocks/get?<stock_id>")]
-pub fn get_stock_by_id(stock_id: i32) -> Json<Stock> {
-    let connection = &mut database::establish_connection();
+pub fn get_stock_by_id(stock_id: i32) -> Result<Json<Stock>, Status> {
+    
+    let result = stocks::get_stock_by_id(stock_id);
 
-    let result = 
-        stock.find(stock_id)
-             .first::<Stock>(connection)
-             .map(Json)
-             .expect("Error loading stocks");
-
-    println!("{:?}", result);
-
-    return result;
+    if let Ok(result) = result {
+        return Ok(Json(result));
+    }
+    else {
+        return Err(Status::NotFound);
+    }
 }

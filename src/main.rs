@@ -5,7 +5,7 @@ mod database;
 
 mod routes;
 mod schema;
-
+mod services;
 
 #[launch]
 fn rocket() -> Rocket<Build> {
